@@ -1,0 +1,13 @@
+{
+  "domain": "update_blocklist",
+  "name": "Update Blocklist",
+  "version": "0.1.0",
+  "documentation": "https://github.com/Basti-Fantasti/hacs-permanent-disable-dev-update",
+  "issue_tracker": "https://github.com/Basti-Fantasti/hacs-permanent-disable-dev-update/issues",
+  "codeowners": ["@Basti-Fantasti"],
+  "config_flow": true,
+  "integration_type": "service",
+  "iot_class": "calculated",
+  "dependencies": ["frontend", "http"],
+  "requirements": []
+}
