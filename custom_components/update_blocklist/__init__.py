@@ -56,8 +56,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register services and views once on first (only) setup.
     if len(hass.data[DOMAIN]) == 1:
         from .services import async_register_services, async_unregister_services
+        from .api import async_register_views
 
         async_register_services(hass)
+        async_register_views(hass)
 
         @callback
         def _on_remove():

@@ -8,6 +8,6 @@
   "config_flow": true,
   "integration_type": "service",
   "iot_class": "calculated",
-  "dependencies": [],
+  "dependencies": ["http"],
   "requirements": []
 }
