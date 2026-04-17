@@ -97,8 +97,52 @@ class BlockItemView(_BaseView):
         return web.Response(status=204 if ok else 404)
 
 
+class CandidatesView(_BaseView):
+    url = f"/api/{DOMAIN}/candidates"
+    name = f"api:{DOMAIN}:candidates"
+
+    async def get(self, request: web.Request) -> web.Response:
+        from homeassistant.helpers import device_registry as dr
+        from homeassistant.helpers import entity_registry as er
+
+        hass: HomeAssistant = request.app["hass"]
+        runtime = _runtime(hass)
+        if runtime is None:
+            return self.json({"candidates": []})
+
+        dev_reg = dr.async_get(hass)
+        ent_reg = er.async_get(hass)
+        already_blocked_ids = {b.device_id for b in runtime["registry"].all_blocks()}
+
+        devices_with_update: dict[str, list[str]] = {}
+        for e in ent_reg.entities.values():
+            if e.domain != "update" or not e.device_id:
+                continue
+            devices_with_update.setdefault(e.device_id, []).append(e.entity_id)
+
+        candidates = []
+        for device_id, entity_ids in devices_with_update.items():
+            if device_id in already_blocked_ids:
+                continue
+            device = dev_reg.async_get(device_id)
+            if device is None:
+                continue
+            candidates.append(
+                {
+                    "device_id": device_id,
+                    "name": device.name_by_user or device.name or device_id,
+                    "manufacturer": device.manufacturer,
+                    "model": device.model,
+                    "update_entity_ids": entity_ids,
+                }
+            )
+
+        return self.json({"candidates": candidates})
+
+
 def async_register_views(hass: HomeAssistant) -> None:
     hass.http.register_view(BlocksListView())
     hass.http.register_view(BlocksWriteView())
     hass.http.register_view(BlockItemView())
     hass.http.register_view(OptionsView())
+    hass.http.register_view(CandidatesView())

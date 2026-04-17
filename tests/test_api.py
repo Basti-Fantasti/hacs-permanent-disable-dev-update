@@ -106,3 +106,47 @@ async def test_add_block_returns_400_for_missing_device_id(hass, hass_client):
     client = await hass_client()
     resp = await client.post(f"/api/{DOMAIN}/blocks", json={"reason": "x"})
     assert resp.status == 400
+
+
+async def test_candidate_devices_returns_only_unblocked_devices_with_update_entities(hass, hass_client):
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    entry = await _setup(hass)
+    runtime = hass.data[DOMAIN][entry.entry_id]
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+
+    d_with_update = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("demo", "wu")},
+        manufacturer="Espressif", model="ESP", name="With Update",
+    )
+    ent_reg.async_get_or_create(
+        domain="update", platform="demo", unique_id="U1",
+        device_id=d_with_update.id,
+    )
+
+    d_no_update = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("demo", "nu")}
+    )
+
+    d_already_blocked = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("demo", "ab")}
+    )
+    ent_reg.async_get_or_create(
+        domain="update", platform="demo", unique_id="U2",
+        device_id=d_already_blocked.id,
+    )
+    await runtime["scanner"].async_block_device(
+        device_id=d_already_blocked.id, reason=""
+    )
+
+    client = await hass_client()
+    resp = await client.get(f"/api/{DOMAIN}/candidates")
+    assert resp.status == 200
+    data = await resp.json()
+    ids = [c["device_id"] for c in data["candidates"]]
+    assert d_with_update.id in ids
+    assert d_no_update.id not in ids
+    assert d_already_blocked.id not in ids
