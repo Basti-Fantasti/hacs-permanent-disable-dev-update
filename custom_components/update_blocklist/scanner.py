@@ -220,3 +220,29 @@ class Scanner:
                 )
             except Exception:  # noqa: BLE001
                 _LOGGER.exception("Scan failed for block %s", block.id)
+
+    def start_schedule(self):
+        """Install the nightly scan trigger at options[CONF_SCAN_START_TIME].
+
+        Returns a callable that removes the listener.
+        """
+        from homeassistant.helpers.event import async_track_time_change
+
+        from .const import (
+            CONF_PER_DEVICE_TIMEOUT_SECONDS,
+            CONF_SCAN_MAX_DURATION_MINUTES,
+            CONF_SCAN_START_TIME,
+        )
+
+        hh_mm = self._options[CONF_SCAN_START_TIME]
+        hour, minute = (int(x) for x in hh_mm.split(":"))
+
+        async def _tick(_now):
+            await self.async_scan_all(
+                max_duration_seconds=self._options[CONF_SCAN_MAX_DURATION_MINUTES] * 60,
+                per_device_timeout_seconds=self._options[CONF_PER_DEVICE_TIMEOUT_SECONDS],
+            )
+
+        return async_track_time_change(
+            self._hass, _tick, hour=hour, minute=minute, second=0
+        )

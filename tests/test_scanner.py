@@ -233,3 +233,35 @@ async def test_scan_all_visits_blocks_in_oldest_first_order(hass):
     # Oldest-first → the block with last_scan_at three days ago first.
     assert visited[0] == created_blocks[0].id
     assert visited[-1] == created_blocks[-1].id
+
+
+async def test_nightly_schedule_triggers_scan_at_configured_time(hass, freezer):
+    from datetime import datetime
+
+    entry = await _setup_integration(hass)
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    scanner = runtime["scanner"]
+
+    calls: list[str] = []
+
+    async def fake_scan_all(*, max_duration_seconds, per_device_timeout_seconds):
+        calls.append("scan_all")
+
+    scanner.async_scan_all = fake_scan_all  # type: ignore[method-assign]
+
+    # freezer available via pytest-homeassistant-custom-component fixtures.
+    freezer.move_to(datetime(2026, 4, 16, 0, 59, 0))
+    # Start schedule: default 01:00.
+    remove = scanner.start_schedule()
+    try:
+        freezer.move_to(datetime(2026, 4, 16, 1, 0, 0))
+        async_fire_time_changed = __import__(
+            "pytest_homeassistant_custom_component.common",
+            fromlist=["async_fire_time_changed"],
+        ).async_fire_time_changed
+        async_fire_time_changed(hass, datetime(2026, 4, 16, 1, 0, 0))
+        await hass.async_block_till_done()
+
+        assert calls == ["scan_all"]
+    finally:
+        remove()
