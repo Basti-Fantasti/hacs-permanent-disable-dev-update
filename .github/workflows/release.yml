@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+      - name: Zip integration
+        run: |
+          cd custom_components/update_blocklist
+          zip -r /tmp/update_blocklist.zip .
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: /tmp/update_blocklist.zip
+          generate_release_notes: true
