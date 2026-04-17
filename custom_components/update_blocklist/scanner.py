@@ -312,7 +312,7 @@ class Scanner:
             )
 
         await self._registry.async_set_pending_rediscovery(pending)
-        await self._coordinator.async_request_refresh()
+        await self._coordinator.async_refresh()
 
     def start_schedule(self):
         """Install the nightly scan trigger at options[CONF_SCAN_START_TIME].
