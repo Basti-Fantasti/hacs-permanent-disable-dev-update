@@ -140,9 +140,52 @@ class CandidatesView(_BaseView):
         return self.json({"candidates": candidates})
 
 
+class ScanView(_BaseView):
+    url = f"/api/{DOMAIN}/scan"
+    name = f"api:{DOMAIN}:scan"
+
+    async def post(self, request: web.Request) -> web.Response:
+        from .const import (
+            CONF_PER_DEVICE_TIMEOUT_SECONDS,
+            CONF_SCAN_MAX_DURATION_MINUTES,
+        )
+
+        hass: HomeAssistant = request.app["hass"]
+        runtime = _runtime(hass)
+        if runtime is None:
+            return web.Response(status=404)
+
+        try:
+            payload = await request.json()
+        except ValueError:
+            payload = {}
+
+        block_id = payload.get("block_id")
+        options = runtime["options"]
+        scanner = runtime["scanner"]
+
+        if block_id:
+            hass.async_create_task(
+                scanner.async_scan_block(
+                    block_id=block_id,
+                    per_device_timeout_seconds=options[CONF_PER_DEVICE_TIMEOUT_SECONDS],
+                )
+            )
+        else:
+            hass.async_create_task(
+                scanner.async_scan_all(
+                    max_duration_seconds=options[CONF_SCAN_MAX_DURATION_MINUTES] * 60,
+                    per_device_timeout_seconds=options[CONF_PER_DEVICE_TIMEOUT_SECONDS],
+                )
+            )
+
+        return web.Response(status=202)
+
+
 def async_register_views(hass: HomeAssistant) -> None:
     hass.http.register_view(BlocksListView())
     hass.http.register_view(BlocksWriteView())
     hass.http.register_view(BlockItemView())
     hass.http.register_view(OptionsView())
     hass.http.register_view(CandidatesView())
+    hass.http.register_view(ScanView())

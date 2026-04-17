@@ -150,3 +150,37 @@ async def test_candidate_devices_returns_only_unblocked_devices_with_update_enti
     assert d_with_update.id in ids
     assert d_no_update.id not in ids
     assert d_already_blocked.id not in ids
+
+
+async def test_scan_endpoint_triggers_scan_all_when_no_block_id(hass, hass_client):
+    entry = await _setup(hass)
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    calls: list[str] = []
+
+    async def fake_scan_all(*, max_duration_seconds, per_device_timeout_seconds):
+        calls.append("all")
+
+    runtime["scanner"].async_scan_all = fake_scan_all  # type: ignore[method-assign]
+
+    client = await hass_client()
+    resp = await client.post(f"/api/{DOMAIN}/scan", json={})
+    assert resp.status == 202
+    await hass.async_block_till_done()
+    assert calls == ["all"]
+
+
+async def test_scan_endpoint_with_block_id_triggers_scan_block(hass, hass_client):
+    entry = await _setup(hass)
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    calls: list[str] = []
+
+    async def fake_scan_block(*, block_id, per_device_timeout_seconds):
+        calls.append(block_id)
+
+    runtime["scanner"].async_scan_block = fake_scan_block  # type: ignore[method-assign]
+
+    client = await hass_client()
+    resp = await client.post(f"/api/{DOMAIN}/scan", json={"block_id": "abc"})
+    assert resp.status == 202
+    await hass.async_block_till_done()
+    assert calls == ["abc"]
