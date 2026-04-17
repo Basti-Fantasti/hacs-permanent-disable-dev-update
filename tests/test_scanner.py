@@ -55,3 +55,31 @@ async def test_block_device_raises_if_no_update_entity(hass):
 
     with pytest.raises(ValueError, match="no update entity"):
         await scanner.async_block_device(device_id=device.id, reason="x")
+
+
+async def test_unblock_reenables_update_entity_and_removes_block(hass):
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    entry = await _setup_integration(hass)
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    scanner = runtime["scanner"]
+    registry = runtime["registry"]
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("demo", "w2")}
+    )
+    update = ent_reg.async_get_or_create(
+        domain="update", platform="demo", unique_id="u1", device_id=device.id
+    )
+
+    block = await scanner.async_block_device(device_id=device.id, reason="")
+    await hass.async_block_till_done()
+
+    await scanner.async_unblock(block_id=block.id)
+    await hass.async_block_till_done()
+
+    assert registry.get_block(block.id) is None
+    assert ent_reg.async_get(update.entity_id).disabled_by is None

@@ -88,3 +88,21 @@ class Scanner:
 
         await self._coordinator.async_request_refresh()
         return block
+
+    async def async_unblock(self, *, block_id: str) -> bool:
+        """Remove a block and re-enable its update entities."""
+        block = self._registry.get_block(block_id)
+        if block is None:
+            return False
+
+        ent_reg = er.async_get(self._hass)
+        for eid in block.update_entity_ids:
+            entry = ent_reg.async_get(eid)
+            if entry is None:
+                continue
+            if entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION:
+                ent_reg.async_update_entity(eid, disabled_by=None)
+
+        await self._registry.async_remove_block(block_id)
+        await self._coordinator.async_request_refresh()
+        return True
