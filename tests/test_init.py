@@ -32,3 +32,29 @@ async def test_setup_creates_registry_in_hass_data(hass):
 
     runtime = hass.data[DOMAIN][entry.entry_id]
     assert isinstance(runtime["registry"], BlockRegistry)
+
+
+async def test_setup_stores_effective_options(hass):
+    from custom_components.update_blocklist.const import (
+        CONF_SCAN_START_TIME,
+        CONF_SCAN_MAX_DURATION_MINUTES,
+        CONF_PER_DEVICE_TIMEOUT_SECONDS,
+    )
+
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={},
+        options={
+            CONF_SCAN_START_TIME: "03:15",
+            CONF_SCAN_MAX_DURATION_MINUTES: 20,
+            CONF_PER_DEVICE_TIMEOUT_SECONDS: 120,
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    opts = runtime["options"]
+    assert opts[CONF_SCAN_START_TIME] == "03:15"
+    assert opts[CONF_SCAN_MAX_DURATION_MINUTES] == 20
+    assert opts[CONF_PER_DEVICE_TIMEOUT_SECONDS] == 120
