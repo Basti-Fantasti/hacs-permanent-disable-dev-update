@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import UpdateBlocklistCoordinator
@@ -52,6 +52,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(remove_schedule)
 
     entry.async_on_unload(entry.add_update_listener(_async_options_reload))
+
+    # Register services and views once on first (only) setup.
+    if len(hass.data[DOMAIN]) == 1:
+        from .services import async_register_services, async_unregister_services
+
+        async_register_services(hass)
+
+        @callback
+        def _on_remove():
+            async_unregister_services(hass)
+
+        entry.async_on_unload(_on_remove)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

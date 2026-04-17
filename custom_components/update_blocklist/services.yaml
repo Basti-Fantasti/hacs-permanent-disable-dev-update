@@ -1,0 +1,41 @@
+block:
+  name: Block device updates
+  description: Permanently block updates for a device.
+  fields:
+    device_id:
+      name: Device
+      description: Home Assistant device ID to block.
+      required: true
+      selector:
+        device: {}
+    reason:
+      name: Reason
+      description: Free-form note explaining why this device is blocked.
+      required: false
+      selector:
+        text:
+
+unblock:
+  name: Remove block
+  description: Remove a previously added block.
+  fields:
+    block_id:
+      name: Block ID
+      description: Internal block ID (found in the panel or block sensor attributes).
+      required: true
+      selector:
+        text:
+
+scan_now:
+  name: Scan a single block
+  description: Immediately refresh the shadow version for one block.
+  fields:
+    block_id:
+      name: Block ID
+      required: true
+      selector:
+        text:
+
+scan_all:
+  name: Scan all blocks
+  description: Immediately run a full scan cycle across all blocks.
