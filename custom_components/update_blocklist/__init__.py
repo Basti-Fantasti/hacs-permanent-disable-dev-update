@@ -57,15 +57,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if len(hass.data[DOMAIN]) == 1:
         from .services import async_register_services, async_unregister_services
         from .api import async_register_views
+        from .panel import async_register_panel, async_remove_panel
 
         async_register_services(hass)
         async_register_views(hass)
+        await async_register_panel(hass)
 
         @callback
         def _on_remove():
             async_unregister_services(hass)
 
         entry.async_on_unload(_on_remove)
+
+        async def _remove_panel():
+            await async_remove_panel(hass)
+
+        entry.async_on_unload(_remove_panel)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
