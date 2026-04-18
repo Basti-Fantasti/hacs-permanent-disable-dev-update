@@ -27,11 +27,11 @@ re-disabling the entity.
 
 ## Screenshots
 
-**Block list panel** — add and manage blocked devices, see last known version and scan status:
+**Block list panel.** Add and manage blocked devices, see last known version and scan status:
 
 ![Block list panel](screenshots/Update-Blocklist-View.png)
 
-**Device detail** — click any device in the panel to see full block info:
+**Device detail.** Click any device in the panel to see full block info:
 
 ![Device detail](screenshots/Update-Blocklist-DeviceView.png)
 
