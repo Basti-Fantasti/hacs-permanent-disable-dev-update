@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1] - 2026-04-18
+
+### Fixed
+- Brand images (`brand/icon.png` and variants) are now included in the release zip, required for HACS validation
+- Release workflow now excludes `__pycache__` from the zip
+
+### Changed
+- README: added badges, screenshots, and a Contributing section
+
 ## [1.0.0] - 2026-04-17
 
 ### Added
