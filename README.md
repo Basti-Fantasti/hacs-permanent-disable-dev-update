@@ -3,8 +3,8 @@
 Permanently block firmware updates for specific Home Assistant devices.
 
 Useful when a device's firmware must not change:
-- custom Chinese WLED boards that brick on stock firmware
-- Zigbee coordinators running patched firmware
+- custom WLED boards that brick on other than stock firmware
+- Zigbee coordinators running patched firmware that would lead to a broken setup if updated
 - devices with known-broken upgrade paths
 
 Home Assistant's "Skip" button is per-version, not permanent. This integration
@@ -14,19 +14,16 @@ integration reloads.
 ## How it works
 
 When a device is blocked, its `update.*` entity is disabled via the entity
-registry — no notifications, no install button, no install service call
+registry. No notifications, no install button, and no install service call
 succeeds. A shadow sensor exposes the last-known `latest_version`, refreshed
 during a configurable nightly scan window by briefly re-enabling and
 re-disabling the entity.
 
 ## Installation
 
-### HACS (custom repo — until accepted to the default store)
+### HACS
 
-1. Open HACS → Integrations → three-dot menu → Custom repositories
-2. Add `https://github.com/Basti-Fantasti/hacs-permanent-disable-dev-update`, category `Integration`
-3. Install "Update Blocklist" → Restart Home Assistant
-4. Settings → Devices & Services → Add Integration → "Update Blocklist"
+Search for "Update Blocklist" in HACS → Integrations and install it. Restart Home Assistant, then add the integration via Settings → Devices & Services → Add Integration → "Update Blocklist".
 
 ### Manual
 
@@ -36,7 +33,7 @@ re-disabling the entity.
 
 ## First-time setup
 
-Click Add Integration → Update Blocklist. No inputs needed — defaults apply.
+Click Add Integration → Update Blocklist. No inputs needed, defaults apply.
 Open the "Update Blocklist" entry in the HA sidebar to manage blocks.
 
 ## Scan window
@@ -59,9 +56,9 @@ Edit these in Settings → Devices & Services → Update Blocklist → Configure
 ## Entities
 
 **Per block:**
-- `sensor.<device>_blocked_update_status` — last known latest version
-- `binary_sensor.<device>_update_blocked` — on while block is active (diagnostic)
-- `button.<device>_scan_now` — one-shot rescan
+- `sensor.<device>_blocked_update_status` - last known latest version
+- `binary_sensor.<device>_update_blocked` - on while block is active (diagnostic)
+- `button.<device>_scan_now` - one-shot rescan
 
 **Integration-level:**
 - `sensor.update_blocklist_blocked_count`
@@ -83,9 +80,8 @@ Edit these in Settings → Devices & Services → Update Blocklist → Configure
 Backend tests:
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements_test.txt
-pytest
+uv sync
+uv run pytest
 ```
 
 Frontend:
@@ -102,6 +98,12 @@ npm test
 English and German ship with the integration. To contribute a new language,
 copy `custom_components/update_blocklist/translations/en.json` to
 `translations/<code>.json` and translate the strings. Open a pull request.
+
+## Contributing
+
+Contributions and feature requests are welcome. If you want to work on something, open an issue first so we can discuss the requirements and agree on an approach before you write code. This avoids wasted effort and keeps the integration coherent.
+
+AI-assisted development is fine and encouraged, but "AI-assisted" means you understand what the code does and stand behind it. Pure vibe-coded fixes - where AI writes the code and it gets submitted without review or understanding - will not be accepted. If in doubt, just get in touch first.
 
 ## License
 

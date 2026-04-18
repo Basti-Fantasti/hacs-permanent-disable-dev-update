@@ -3,7 +3,7 @@
 ## [1.0.0] - 2026-04-17
 
 ### Added
-- Persistent block list stored in HA `.storage` — survives restarts, reloads, and re-pairs
+- Persistent block list stored in HA `.storage`. Survives restarts, reloads, and re-pairs
 - Sidebar panel to manage blocks: add, remove, scan individual devices
 - Nightly scan window: briefly re-enables blocked entities to refresh latest-version info, then re-disables
 - Shadow sensor per block exposing `last_known_version` and `last_scan_at`

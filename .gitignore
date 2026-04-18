@@ -28,3 +28,6 @@ Thumbs.db
 # Build outputs (frontend build lands in custom_components/update_blocklist/www/, keep committed)
 # but leave source maps out
 *.map
+
+# Development docs — not part of the integration
+docs/
