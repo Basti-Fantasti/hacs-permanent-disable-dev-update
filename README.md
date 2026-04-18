@@ -25,6 +25,21 @@ succeeds. A shadow sensor exposes the last-known `latest_version`, refreshed
 during a configurable nightly scan window by briefly re-enabling and
 re-disabling the entity.
 
+## Screenshots
+
+**Block list panel** — add and manage blocked devices, see last known version and scan status:
+
+![Block list panel](screenshots/Update-Blocklist-View.png)
+
+**Device detail** — click any device in the panel to see full block info:
+
+![Device detail](screenshots/Update-Blocklist-DeviceView.png)
+
+**Integration page and device overview** in Home Assistant:
+
+![Integration page](screenshots/Update-Blocklist-Integration-German.png)
+![HA device overview](screenshots/Update-Blocklist-Overview.png)
+
 ## Installation
 
 ### HACS
@@ -49,6 +64,8 @@ Defaults: scan starts at `01:00`, runs for up to 30 minutes, per-device timeout
 can refresh the latest-version information, then re-disabled.
 
 Edit these in Settings → Devices & Services → Update Blocklist → Configure.
+
+![Scan window configuration](screenshots/Update-Blocklist-Scan-Window.png)
 
 ## Services
 
