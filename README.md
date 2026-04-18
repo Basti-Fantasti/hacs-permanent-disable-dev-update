@@ -1,8 +1,8 @@
 # Update Blocklist
 
-[![HACS Validation](https://github.com/Basti-Fantasti/hacs-permanent-disable-dev-update/actions/workflows/validate.yml/badge.svg)](https://github.com/Basti-Fantasti/hacs-permanent-disable-dev-update/actions/workflows/validate.yml)
-[![Tests](https://github.com/Basti-Fantasti/hacs-permanent-disable-dev-update/actions/workflows/test.yml/badge.svg)](https://github.com/Basti-Fantasti/hacs-permanent-disable-dev-update/actions/workflows/test.yml)
-[![Latest Release](https://img.shields.io/github/v/release/Basti-Fantasti/hacs-permanent-disable-dev-update)](https://github.com/Basti-Fantasti/hacs-permanent-disable-dev-update/releases)
+[![HACS Validation](https://github.com/Basti-Fantasti/permanent-disable-dev-update/actions/workflows/validate.yml/badge.svg)](https://github.com/Basti-Fantasti/permanent-disable-dev-update/actions/workflows/validate.yml)
+[![Tests](https://github.com/Basti-Fantasti/permanent-disable-dev-update/actions/workflows/test.yml/badge.svg)](https://github.com/Basti-Fantasti/permanent-disable-dev-update/actions/workflows/test.yml)
+[![Latest Release](https://img.shields.io/github/v/release/Basti-Fantasti/permanent-disable-dev-update)](https://github.com/Basti-Fantasti/permanent-disable-dev-update/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![HA 2024.12+](https://img.shields.io/badge/Home%20Assistant-2024.12%2B-blue?logo=home-assistant)](https://www.home-assistant.io)
 
