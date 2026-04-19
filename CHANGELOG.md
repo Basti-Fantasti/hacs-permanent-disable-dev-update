@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.2] - 2026-04-19
+
+### Fixed
+- Add-block and block-detail dialogs now fit mobile viewports. They no longer force a 400px minimum width, and scroll their content when the viewport is shorter than the dialog.
+- Block detail view now shows the currently installed firmware version alongside the latest version seen, so it is clear which version the device is pinned to.
+
 ## [1.0.1] - 2026-04-18
 
 ### Fixed
