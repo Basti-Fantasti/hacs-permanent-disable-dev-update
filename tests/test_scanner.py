@@ -236,6 +236,36 @@ async def test_scan_all_visits_blocks_in_oldest_first_order(hass):
     assert visited[-1] == created_blocks[-1].id
 
 
+async def test_block_device_captures_installed_version(hass):
+    """Blocking captures both latest_version and installed_version from state."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    entry = await _setup_integration(hass)
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    scanner = runtime["scanner"]
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("demo", "iv1")}
+    )
+    update = ent_reg.async_get_or_create(
+        domain="update", platform="demo", unique_id="uiv", device_id=device.id
+    )
+
+    hass.states.async_set(
+        update.entity_id, "on",
+        {"installed_version": "1.9.0", "latest_version": "2.0.0"},
+    )
+
+    block = await scanner.async_block_device(device_id=device.id, reason="")
+    await hass.async_block_till_done()
+
+    assert block.last_known_version == "2.0.0"
+    assert block.installed_version == "1.9.0"
+
+
 async def test_nightly_schedule_triggers_scan_at_configured_time(hass, freezer):
     from datetime import datetime
 

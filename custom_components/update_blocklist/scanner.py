@@ -64,12 +64,19 @@ class Scanner:
             name=device.name_by_user or device.name,
         )
 
-        # Capture last known latest_version from state before disabling.
-        last_known_version = None
+        # Capture last known latest_version and current installed_version from state
+        # before disabling.
+        last_known_version: str | None = None
+        installed_version: str | None = None
         for eid in update_entity_ids:
             state = self._hass.states.get(eid)
-            if state and state.attributes.get("latest_version"):
+            if not state:
+                continue
+            if last_known_version is None and state.attributes.get("latest_version"):
                 last_known_version = state.attributes["latest_version"]
+            if installed_version is None and state.attributes.get("installed_version"):
+                installed_version = state.attributes["installed_version"]
+            if last_known_version is not None and installed_version is not None:
                 break
 
         block = await self._registry.async_add_block(
@@ -79,6 +86,7 @@ class Scanner:
             fingerprint=fingerprint,
             reason=reason,
             last_known_version=last_known_version,
+            installed_version=installed_version,
         )
 
         for eid in update_entity_ids:
