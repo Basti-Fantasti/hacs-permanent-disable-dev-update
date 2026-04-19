@@ -157,6 +157,15 @@ class Scanner:
             target_eid, per_device_timeout_seconds
         )
 
+        # Opportunistic installed_version refresh: use the current state of the target
+        # entity. Leave the stored value alone if the attribute is absent so we do not
+        # regress to None when the integration only repopulates latest_version.
+        current_state = self._hass.states.get(target_eid)
+        if current_state is not None:
+            installed = current_state.attributes.get("installed_version")
+            if installed:
+                block.installed_version = installed
+
         block.last_scan_at = datetime.now(UTC).isoformat()
         if new_version is None:
             block.last_scan_status = SCAN_STATUS_TIMEOUT

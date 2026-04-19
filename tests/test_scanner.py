@@ -266,6 +266,107 @@ async def test_block_device_captures_installed_version(hass):
     assert block.installed_version == "1.9.0"
 
 
+async def test_scan_block_refreshes_installed_version(hass):
+    """A scan refreshes installed_version when the state exposes it."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    entry = await _setup_integration(hass)
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    scanner = runtime["scanner"]
+    registry = runtime["registry"]
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("demo", "iv_scan_refresh")}
+    )
+    update = ent_reg.async_get_or_create(
+        domain="update", platform="demo", unique_id="uivscan", device_id=device.id
+    )
+
+    # Seed state so block-time captures installed_version="1.9.0".
+    hass.states.async_set(
+        update.entity_id, "on",
+        {"installed_version": "1.9.0", "latest_version": "1.9.0"},
+    )
+
+    block = await scanner.async_block_device(device_id=device.id, reason="")
+    await hass.async_block_till_done()
+    assert block.installed_version == "1.9.0"
+
+    # Clear the seeded state so the scan has to wait for a fresh update push.
+    hass.states.async_remove(update.entity_id)
+
+    async def _populate():
+        for _ in range(50):
+            if ent_reg.async_get(update.entity_id).disabled_by is None:
+                hass.states.async_set(
+                    update.entity_id, "on",
+                    {"installed_version": "2.1.0", "latest_version": "2.0.0"},
+                )
+                return
+            await asyncio.sleep(0.01)
+
+    task = asyncio.create_task(_populate())
+    await scanner.async_scan_block(block_id=block.id, per_device_timeout_seconds=5)
+    await task
+
+    updated = registry.get_block(block.id)
+    assert updated.installed_version == "2.1.0"
+
+
+async def test_scan_block_preserves_installed_version_when_absent(hass):
+    """A scan leaves installed_version alone when the state does not expose it."""
+    from homeassistant.helpers import device_registry as dr
+    from homeassistant.helpers import entity_registry as er
+
+    entry = await _setup_integration(hass)
+    runtime = hass.data[DOMAIN][entry.entry_id]
+    scanner = runtime["scanner"]
+    registry = runtime["registry"]
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    device = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("demo", "iv_scan_preserve")}
+    )
+    update = ent_reg.async_get_or_create(
+        domain="update", platform="demo", unique_id="uivpres", device_id=device.id
+    )
+
+    # Seed state so block-time captures installed_version="1.9.0".
+    hass.states.async_set(
+        update.entity_id, "on",
+        {"installed_version": "1.9.0", "latest_version": "1.9.0"},
+    )
+
+    block = await scanner.async_block_device(device_id=device.id, reason="")
+    await hass.async_block_till_done()
+    assert block.installed_version == "1.9.0"
+
+    # Clear the seeded state so the scan has to wait for a fresh update push.
+    hass.states.async_remove(update.entity_id)
+
+    async def _populate():
+        for _ in range(50):
+            if ent_reg.async_get(update.entity_id).disabled_by is None:
+                # Only latest_version; no installed_version attribute.
+                hass.states.async_set(
+                    update.entity_id, "on",
+                    {"latest_version": "2.0.0"},
+                )
+                return
+            await asyncio.sleep(0.01)
+
+    task = asyncio.create_task(_populate())
+    await scanner.async_scan_block(block_id=block.id, per_device_timeout_seconds=5)
+    await task
+
+    updated = registry.get_block(block.id)
+    assert updated.installed_version == "1.9.0"
+
+
 async def test_nightly_schedule_triggers_scan_at_configured_time(hass, freezer):
     from datetime import datetime
 
