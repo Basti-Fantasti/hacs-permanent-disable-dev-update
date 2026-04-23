@@ -7,6 +7,7 @@ import {
   type Options,
   type PendingRediscovery,
 } from "./api-client";
+import { LOADED_VERSION } from "./loaded-version";
 import "./views/blocks-list";
 import "./views/add-block-dialog";
 import "./views/rediscovery-prompt";
@@ -19,6 +20,8 @@ interface HomeAssistantLike {
 @customElement("update-blocklist-panel")
 export class UpdateBlocklistPanel extends LitElement {
   @property({ attribute: false }) hass?: HomeAssistantLike;
+  @state() private _backendVersion: string | null = null;
+  @property({ attribute: false }) loadedVersion: string | null = LOADED_VERSION;
   @state() private _blocks: Block[] = [];
   @state() private _pending: PendingRediscovery[] = [];
   @state() private _candidates: Candidate[] = [];
@@ -89,6 +92,25 @@ export class UpdateBlocklistPanel extends LitElement {
       max-height: calc(100vh - 32px);
       overflow: auto;
     }
+    .reload-banner {
+      background: var(--warning-color, #f6a609);
+      color: #111;
+      padding: 10px 14px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .reload-banner button {
+      background: #111;
+      color: #fff;
+      border: 0;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
   `;
 
   connectedCallback(): void {
@@ -107,9 +129,22 @@ export class UpdateBlocklistPanel extends LitElement {
       this._pending = list.pending_rediscovery;
       this._options = opts;
       this._version = info.version || null;
+      this._backendVersion = info.version || null;
     } catch (err) {
       this._error = (err as Error).message;
     }
+  }
+
+  private _isVersionMismatch(): boolean {
+    return (
+      this.loadedVersion !== null &&
+      this._backendVersion !== null &&
+      this.loadedVersion !== this._backendVersion
+    );
+  }
+
+  private _reload(): void {
+    window.location.reload();
   }
 
   private async _openAdd(): Promise<void> {
@@ -169,6 +204,17 @@ export class UpdateBlocklistPanel extends LitElement {
         </div>
         <button class="primary" @click=${this._openAdd}>Add block</button>
       </header>
+      ${this._isVersionMismatch()
+        ? html`
+            <div class="reload-banner" data-test="reload-banner" role="alert">
+              <span>
+                A new version of Update Blocklist is available
+                (v${this._backendVersion}). Reload to update.
+              </span>
+              <button @click=${this._reload}>Reload</button>
+            </div>
+          `
+        : html``}
       ${this._error ? html`<div class="error">${this._error}</div>` : html``}
 
       <rediscovery-prompt
