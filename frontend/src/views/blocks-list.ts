@@ -6,11 +6,34 @@ import type { Block } from "../api-client";
 export class BlocksListView extends LitElement {
   @property({ attribute: false }) blocks: Block[] = [];
   @state() private _detailBlock: Block | null = null;
+  @state() private _iconErrors: Set<string> = new Set();
 
   static styles = css`
     :host { display: block; }
     table { border-collapse: collapse; width: 100%; }
-    th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--divider-color, #ccc); }
+    th, td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid var(--divider-color, #ccc);
+      white-space: nowrap;
+      vertical-align: top;
+    }
+    td.icon-cell {
+      width: 32px;
+      padding-right: 0;
+    }
+    td.icon-cell img,
+    td.icon-cell ha-icon {
+      width: 24px;
+      height: 24px;
+      display: block;
+      --mdc-icon-size: 24px;
+    }
+    td.reason {
+      white-space: normal;
+      word-break: break-word;
+      max-width: 320px;
+    }
     .empty { padding: 16px; color: var(--secondary-text-color, #666); }
     button.remove { color: var(--error-color, #d33); }
     .device-link {
@@ -63,7 +86,9 @@ export class BlocksListView extends LitElement {
       <table>
         <thead>
           <tr>
-            <th>Device</th><th>Reason</th><th>Last known version</th>
+            <th></th>
+            <th>Device</th><th>Reason</th>
+            <th>Pinned version</th><th>Last known version</th>
             <th>Last scan</th><th>Status</th><th></th>
           </tr>
         </thead>
@@ -71,6 +96,9 @@ export class BlocksListView extends LitElement {
           ${this.blocks.map(
             (b) => html`
               <tr data-test="block-row">
+                <td class="icon-cell" data-test="brand-icon-cell">
+                  ${this._renderIcon(b)}
+                </td>
                 <td>
                   <span
                     class="device-link"
@@ -78,7 +106,8 @@ export class BlocksListView extends LitElement {
                     title="Click for details"
                   >${this._deviceDisplayName(b)}</span>
                 </td>
-                <td>${b.reason || "—"}</td>
+                <td class="reason">${b.reason || "—"}</td>
+                <td>${b.installed_version ?? "unknown"}</td>
                 <td>${b.last_known_version ?? "unknown"}</td>
                 <td>${b.last_scan_at ?? "never"}</td>
                 <td>${b.status}</td>
@@ -100,6 +129,24 @@ export class BlocksListView extends LitElement {
     `;
   }
 
+  private _renderIcon(b: Block) {
+    const domain = b.integration_domain;
+    if (!domain || this._iconErrors.has(b.id)) {
+      return html`<ha-icon icon="mdi:devices" data-test="brand-icon-fallback"></ha-icon>`;
+    }
+    return html`<img
+      src="https://brands.home-assistant.io/_/${domain}/icon.png"
+      alt=${domain}
+      data-test="brand-icon-img"
+      @error=${() => this._onIconError(b.id)}
+    />`;
+  }
+
+  private _onIconError(blockId: string) {
+    if (this._iconErrors.has(blockId)) return;
+    this._iconErrors = new Set([...this._iconErrors, blockId]);
+  }
+
   private _deviceDisplayName(b: Block): string {
     const name = b.fingerprint?.name;
     return name || b.device_id;
@@ -113,7 +160,7 @@ export class BlocksListView extends LitElement {
       ["Device ID", b.device_id],
       ["Status", b.status],
       ["Reason", b.reason || "—"],
-      ["Current version", b.installed_version ?? "unknown"],
+      ["Pinned version", b.installed_version ?? "unknown"],
       ["Latest version seen", b.last_known_version ?? "unknown"],
       ["Last scan", b.last_scan_at ?? "never"],
       ["Created", b.created_at],
